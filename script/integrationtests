@@ -23,4 +23,4 @@ fi
 mkdir -p "${LOG_DIR}"
 
 # shellcheck disable=SC2068
-go test -v -timeout $timeout -tags "fixtures acceptance" "${PACKAGE:-./internal/acceptance/openstack/...}" $@ |& tee -a "${LOG_DIR}/acceptance_tests.log"
+IRONIC_ENDPOINT="http://127.0.0.1:6385/v1" go test -v -timeout $timeout -tags "fixtures acceptance" "${PACKAGE:-./internal/acceptance/openstack/...}" $@ |& tee -a "${LOG_DIR}/acceptance_tests.log"
