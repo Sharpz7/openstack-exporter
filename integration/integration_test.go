@@ -20,7 +20,7 @@ func TestIntegration(t *testing.T) {
 	th.AssertNoErr(t, err)
 	client.Microversion = "1.50"
 
-	CreateNode(t, client)
+	_, err = CreateNode(t, client)
 	th.AssertNoErr(t, err)
 
 	// Start the OpenStack exporter
