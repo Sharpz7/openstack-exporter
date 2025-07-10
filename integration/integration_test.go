@@ -23,14 +23,14 @@ func TestIntegration(t *testing.T) {
 	th.AssertNoErr(t, err)
 
 	// Start the OpenStack exporter
-	listenAddress, cleanup, err := startOpenStackExporter()
+	_, cleanup, err := startOpenStackExporter()
 	if err != nil {
 		t.Fatalf("Failed to start OpenStack exporter: %v", err)
 	}
 	defer cleanup()
 
 	// Construct the metrics URL
-	metricsURL := "http://localhost" + listenAddress + "/metrics"
+	metricsURL := "http://localhost:9180/metrics"
 
 	// Helper function to fetch metrics with retries
 	fetchMetrics := func(
@@ -43,6 +43,8 @@ func TestIntegration(t *testing.T) {
 				defer resp.Body.Close()
 				body, err = io.ReadAll(resp.Body)
 				if err == nil {
+					// Print the body
+					t.Logf("Metrics body: %s", string(body))
 					return resp, body, nil // Success!
 				}
 				t.Logf("Attempt %d: Failed to read response body: %v", i+1, err)
