@@ -14,9 +14,8 @@ import (
 
 func TestIntegration(t *testing.T) {
 	clients.RequireLong(t)
-	clients.RequireIronicNoAuth(t)
 
-	client, err := clients.NewBareMetalV1NoAuthClient()
+	client, err := clients.NewBareMetalV1Client()
 	th.AssertNoErr(t, err)
 	client.Microversion = "1.50"
 
