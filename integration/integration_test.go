@@ -90,7 +90,7 @@ func TestIntegration(t *testing.T) {
 	bodyString := string(body)
 
 	// Check for the expected metric and provide a clearer error message
-	expectedMetric := "gmeigegme"
+	expectedMetric := "openstack_ironic_node"
 	if !strings.Contains(bodyString, expectedMetric) {
 		t.Errorf(
 			"Metric '%s' not found in metrics response.\n\n"+
