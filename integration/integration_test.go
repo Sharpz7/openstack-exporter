@@ -19,8 +19,9 @@ func TestIntegration(t *testing.T) {
 	th.AssertNoErr(t, err)
 	client.Microversion = "1.50"
 
-	_, err = CreateNode(t, client)
+	node, err := CreateNode(t, client)
 	th.AssertNoErr(t, err)
+	defer DeleteNode(t, client, node)
 
 	// Start the OpenStack exporter
 	_, cleanup, err := startOpenStackExporter()
@@ -43,8 +44,6 @@ func TestIntegration(t *testing.T) {
 				defer resp.Body.Close()
 				body, err = io.ReadAll(resp.Body)
 				if err == nil {
-					// Print the body
-					t.Logf("Metrics body: %s", string(body))
 					return resp, body, nil // Success!
 				}
 				t.Logf("Attempt %d: Failed to read response body: %v", i+1, err)
@@ -75,6 +74,8 @@ func TestIntegration(t *testing.T) {
 			maxTries,
 		)
 	}
+
+	time.Sleep(10 * time.Second)
 
 	// Fetch the metrics
 	const maxTriesFetch = 10

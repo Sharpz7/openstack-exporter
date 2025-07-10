@@ -20,6 +20,8 @@ import (
 	"github.com/openstack-exporter/openstack-exporter/integration/tools"
 )
 
+var DEFAULT_OS_CLIENT_CONFIG = "/etc/openstack/clouds.yaml"
+
 // startOpenStackExporter starts an instance of the OpenStack exporter for
 // testing purposes. It returns a cleanup function that should be called
 // after the test is complete to shut down the exporter.
@@ -50,7 +52,7 @@ func startOpenStackExporter() (string, func(), error) {
 
 	// Define services to enable. For simplicity, we'll enable a minimal
 	// set. Adjust as needed for your tests.
-	enabledServices := []string{"baremetal"}
+	var enabledServices = []string{"network", "compute", "image", "volume", "identity", "object-store", "load-balancer", "container-infra", "dns", "baremetal", "gnocchi", "database", "orchestration", "placement", "sharev2"}
 
 	// Enable exporters
 	enabledExporters := 0
@@ -157,4 +159,22 @@ func CreateNode(t *testing.T, client *gophercloud.ServiceClient) (*nodes.Node, e
 	}).Extract()
 
 	return node, err
+}
+
+// DeleteNode deletes a bare metal node via its UUID.
+func DeleteNode(t *testing.T, client *gophercloud.ServiceClient, node *nodes.Node) {
+	// Force deletion of provisioned nodes requires maintenance mode.
+	err := nodes.SetMaintenance(context.TODO(), client, node.UUID, nodes.MaintenanceOpts{
+		Reason: "forced deletion",
+	}).ExtractErr()
+	if err != nil {
+		t.Fatalf("Unable to move node %s into maintenance mode: %s", node.UUID, err)
+	}
+
+	err = nodes.Delete(context.TODO(), client, node.UUID).ExtractErr()
+	if err != nil {
+		t.Fatalf("Unable to delete node %s: %s", node.UUID, err)
+	}
+
+	t.Logf("Deleted server: %s", node.UUID)
 }
