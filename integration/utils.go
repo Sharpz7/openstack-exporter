@@ -200,3 +200,65 @@ func CreateFakeNode(t *testing.T, client *gophercloud.ServiceClient) (*nodes.Nod
 
 	return node, err
 }
+
+// DeployFakeNode deploys a node that uses fake-hardware.
+func DeployFakeNode(t *testing.T, client *gophercloud.ServiceClient, node *nodes.Node) (*nodes.Node, error) {
+	ctx, cancel := context.WithTimeout(context.TODO(), 30*time.Second)
+	defer cancel()
+
+	currentState := node.ProvisionState
+
+	if currentState == string(nodes.Enroll) {
+		t.Logf("moving fake node %s to manageable", node.UUID)
+		err := nodes.ChangeProvisionState(ctx, client, node.UUID, nodes.ProvisionStateOpts{
+			Target: nodes.TargetManage,
+		}).ExtractErr()
+		if err != nil {
+			return node, err
+		}
+
+		err = nodes.WaitForProvisionState(ctx, client, node.UUID, nodes.Manageable)
+		if err != nil {
+			return node, err
+		}
+
+		currentState = string(nodes.Manageable)
+	}
+
+	if currentState == string(nodes.Manageable) {
+		t.Logf("moving fake node %s to available", node.UUID)
+		err := nodes.ChangeProvisionState(ctx, client, node.UUID, nodes.ProvisionStateOpts{
+			Target: nodes.TargetProvide,
+		}).ExtractErr()
+		if err != nil {
+			return node, err
+		}
+
+		err = nodes.WaitForProvisionState(ctx, client, node.UUID, nodes.Available)
+		if err != nil {
+			return node, err
+		}
+
+		currentState = string(nodes.Available)
+	}
+
+	t.Logf("deploying fake node %s", node.UUID)
+	return ChangeProvisionStateAndWait(ctx, client, node, nodes.ProvisionStateOpts{
+		Target: nodes.TargetActive,
+	}, nodes.Active)
+}
+
+func ChangeProvisionStateAndWait(ctx context.Context, client *gophercloud.ServiceClient, node *nodes.Node,
+	change nodes.ProvisionStateOpts, expectedState nodes.ProvisionState) (*nodes.Node, error) {
+	err := nodes.ChangeProvisionState(ctx, client, node.UUID, change).ExtractErr()
+	if err != nil {
+		return node, err
+	}
+
+	err = nodes.WaitForProvisionState(ctx, client, node.UUID, expectedState)
+	if err != nil {
+		return node, err
+	}
+
+	return nodes.Get(ctx, client, node.UUID).Extract()
+}

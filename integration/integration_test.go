@@ -17,11 +17,13 @@ func TestIntegration(t *testing.T) {
 
 	client, err := clients.NewBareMetalV1Client()
 	th.AssertNoErr(t, err)
-	client.Microversion = "1.50"
+	client.Microversion = "1.87"
 
 	node, err := CreateFakeNode(t, client)
 	th.AssertNoErr(t, err)
-	defer DeleteNode(t, client, node)
+
+	node, err = DeployFakeNode(t, client, node)
+	th.AssertNoErr(t, err)
 
 	// Start the OpenStack exporter
 	_, cleanup, err := startOpenStackExporter()
