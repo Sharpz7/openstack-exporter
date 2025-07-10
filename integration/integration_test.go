@@ -19,7 +19,7 @@ func TestIntegration(t *testing.T) {
 	th.AssertNoErr(t, err)
 	client.Microversion = "1.50"
 
-	node, err := CreateNode(t, client)
+	node, err := CreateFakeNode(t, client)
 	th.AssertNoErr(t, err)
 	defer DeleteNode(t, client, node)
 

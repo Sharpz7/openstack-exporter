@@ -178,3 +178,25 @@ func DeleteNode(t *testing.T, client *gophercloud.ServiceClient, node *nodes.Nod
 
 	t.Logf("Deleted server: %s", node.UUID)
 }
+
+func CreateFakeNode(t *testing.T, client *gophercloud.ServiceClient) (*nodes.Node, error) {
+	name := tools.RandomString("ACPTTEST", 16)
+	t.Logf("Attempting to create bare metal node: %s", name)
+
+	node, err := nodes.Create(context.TODO(), client, nodes.CreateOpts{
+		Name:            name,
+		Driver:          "fake-hardware",
+		BootInterface:   "fake",
+		DeployInterface: "fake",
+		DriverInfo: map[string]any{
+			"ipmi_port":      "6230",
+			"ipmi_username":  "admin",
+			"deploy_kernel":  "http://172.22.0.1/images/tinyipa-stable-rocky.vmlinuz",
+			"ipmi_address":   "192.168.122.1",
+			"deploy_ramdisk": "http://172.22.0.1/images/tinyipa-stable-rocky.gz",
+			"ipmi_password":  "admin",
+		},
+	}).Extract()
+
+	return node, err
+}
