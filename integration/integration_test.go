@@ -82,6 +82,7 @@ func TestIntegration(t *testing.T) {
 	// Fetch the metrics
 	const maxTriesFetch = 10
 	resp, body, err := fetchMetrics(metricsURL, maxTriesFetch)
+	t.Logf("Metrics: %s", body)
 	if err != nil {
 		t.Fatalf("Failed to fetch metrics after multiple retries: %v", err)
 	}
