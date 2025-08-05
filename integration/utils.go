@@ -36,7 +36,7 @@ func startOpenStackExporter() (string, func(), error) {
 	disableSlowMetrics := false
 	disableDeprecatedMetrics := false
 	disableCinderAgentUUID := false
-	cloud := "devstack" // Or any suitable default for testing
+	cloud := "devstack-system-admin" // Or any suitable default for testing
 	domainID := ""
 	tenantID := ""
 
