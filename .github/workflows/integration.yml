@@ -83,6 +83,10 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: '^1.22'
+      - name: Display clouds.yaml configuration
+        run: |
+          echo "Contents of /etc/openstack/clouds.yaml:"
+          cat /etc/openstack/clouds.yaml || echo "File /etc/openstack/clouds.yaml not found"
       - name: Run Openstack Integration Tests
         run: ./script/integrationtests
         env:
