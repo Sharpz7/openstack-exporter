@@ -10,6 +10,7 @@ import (
 
 	th "github.com/gophercloud/gophercloud/v2/testhelper"
 	"github.com/openstack-exporter/openstack-exporter/integration/clients"
+	"github.com/openstack-exporter/openstack-exporter/integration/funcs"
 )
 
 func TestBaremetalIntegration(t *testing.T) {
@@ -19,10 +20,10 @@ func TestBaremetalIntegration(t *testing.T) {
 	th.AssertNoErr(t, err)
 	client.Microversion = "1.87"
 
-	node, err := CreateFakeNode(t, client)
+	node, err := funcs.CreateFakeNode(t, client)
 	th.AssertNoErr(t, err)
 
-	node, err = DeployFakeNode(t, client, node)
+	node, err = funcs.DeployFakeNode(t, client, node)
 	th.AssertNoErr(t, err)
 
 	// Start the OpenStack exporter
