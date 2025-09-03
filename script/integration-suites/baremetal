@@ -8,7 +8,7 @@
 set -xo pipefail
 
 # shellcheck disable=SC1091
-source "$(dirname "$0")/stackenv"
+source "$(dirname "$0")/../stackenv"
 
 # ...but we can do it after the fact
 set -eu
