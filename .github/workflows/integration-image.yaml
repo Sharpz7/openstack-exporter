@@ -32,7 +32,7 @@ jobs:
           echo "Contents of /etc/openstack/clouds.yaml:"
           cat /etc/openstack/clouds.yaml || echo "File /etc/openstack/clouds.yaml not found"
       - name: Run Openstack Integration Tests
-        run: ./script/integration-suites/image
+        run: bash ./script/integration-suites/image
         env:
           DEVSTACK_PATH: ${{ github.workspace }}/devstack
           PACKAGE: "./integration"

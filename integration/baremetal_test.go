@@ -16,7 +16,7 @@ import (
 func TestBaremetalIntegration(t *testing.T) {
 	clients.RequireLong(t)
 
-	client, err := clients.NewBareMetalV1Client()
+	client, err := clients.NewBareMetalV1NoAuthClient()
 	th.AssertNoErr(t, err)
 	client.Microversion = "1.87"
 
