@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/gophercloud/gophercloud/v2"
-	"github.com/gophercloud/gophercloud/v2/internal/acceptance/tools"
 	"github.com/gophercloud/gophercloud/v2/openstack/identity/v3/domains"
 	"github.com/gophercloud/gophercloud/v2/openstack/identity/v3/groups"
 	"github.com/gophercloud/gophercloud/v2/openstack/identity/v3/projects"
@@ -15,6 +14,7 @@ import (
 	"github.com/gophercloud/gophercloud/v2/openstack/identity/v3/trusts"
 	"github.com/gophercloud/gophercloud/v2/openstack/identity/v3/users"
 	th "github.com/gophercloud/gophercloud/v2/testhelper"
+	"github.com/openstack-exporter/openstack-exporter/integration/tools"
 )
 
 // CreateProject will create a project with a random name.

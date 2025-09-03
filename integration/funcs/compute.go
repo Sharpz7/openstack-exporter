@@ -12,8 +12,6 @@ import (
 	"time"
 
 	"github.com/gophercloud/gophercloud/v2"
-	"github.com/gophercloud/gophercloud/v2/internal/acceptance/clients"
-	"github.com/gophercloud/gophercloud/v2/internal/acceptance/tools"
 	"github.com/gophercloud/gophercloud/v2/openstack/blockstorage/v2/volumes"
 	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/aggregates"
 	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/attachinterfaces"
@@ -27,6 +25,8 @@ import (
 	"github.com/gophercloud/gophercloud/v2/openstack/compute/v2/volumeattach"
 	neutron "github.com/gophercloud/gophercloud/v2/openstack/networking/v2/networks"
 	th "github.com/gophercloud/gophercloud/v2/testhelper"
+	"github.com/openstack-exporter/openstack-exporter/integration/clients"
+	"github.com/openstack-exporter/openstack-exporter/integration/tools"
 
 	"golang.org/x/crypto/ssh"
 )
@@ -692,7 +692,6 @@ func CreateServerWithPublicKey(t *testing.T, client *gophercloud.ServiceClient, 
 		Networks: []servers.Network{
 			{UUID: networkID},
 		},
-		KeyName: keyPairName,
 	}
 
 	server, err := servers.Create(context.TODO(), client, createOpts, nil).Extract()

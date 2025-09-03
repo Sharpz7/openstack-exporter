@@ -1,30 +1,18 @@
-name: functional-baremetal
+name: integration-baremetal
 on:
   pull_request:
   workflow_dispatch:
 
 jobs:
-  functional-baremetal:
+  integration-baremetal:
     strategy:
       fail-fast: false
       matrix:
         include:
-          # - name: "master"
-          #   openstack_version: "master"
-          #   ubuntu_version: "22.04"
-          #   additional_services: "openstack-cli-server"
           - name: "epoxy"
             openstack_version: "stable/2025.1"
             ubuntu_version: "22.04"
             additional_services: "openstack-cli-server"
-          # - name: "dalmatian"
-          #   openstack_version: "stable/2024.2"
-          #   ubuntu_version: "22.04"
-          #   additional_services: "openstack-cli-server"
-          # - name: "caracal"
-          #   openstack_version: "stable/2024.1"
-          #   ubuntu_version: "22.04"
-          #   additional_services: ""
     runs-on: ubuntu-${{ matrix.ubuntu_version }}
     name: Deploy OpenStack ${{ matrix.name }} with Ironic and run baremetal acceptance tests
     steps:
@@ -88,7 +76,7 @@ jobs:
           echo "Contents of /etc/openstack/clouds.yaml:"
           cat /etc/openstack/clouds.yaml || echo "File /etc/openstack/clouds.yaml not found"
       - name: Run Openstack Integration Tests
-        run: ./script/integrationtests
+        run: ./script/integration-suites/baremetal
         env:
           DEVSTACK_PATH: ${{ github.workspace }}/devstack
           PACKAGE: "./integration/..."
@@ -102,5 +90,5 @@ jobs:
         if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: functional-baremetal-${{ matrix.name }}-${{ github.run_id }}
+          name: integration-baremetal-${{ matrix.name }}-${{ github.run_id }}
           path: /tmp/devstack-logs/*

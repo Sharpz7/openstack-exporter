@@ -6,12 +6,12 @@ import (
 	"testing"
 
 	"github.com/gophercloud/gophercloud/v2"
-	"github.com/gophercloud/gophercloud/v2/internal/acceptance/tools"
 	"github.com/gophercloud/gophercloud/v2/openstack/messaging/v2/claims"
 	"github.com/gophercloud/gophercloud/v2/openstack/messaging/v2/messages"
 	"github.com/gophercloud/gophercloud/v2/openstack/messaging/v2/queues"
 	"github.com/gophercloud/gophercloud/v2/pagination"
 	th "github.com/gophercloud/gophercloud/v2/testhelper"
+	"github.com/openstack-exporter/openstack-exporter/integration/tools"
 )
 
 func CreateQueue(t *testing.T, client *gophercloud.ServiceClient) (string, error) {

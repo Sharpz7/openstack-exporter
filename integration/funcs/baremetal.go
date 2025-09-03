@@ -8,7 +8,6 @@ import (
 	"github.com/gophercloud/gophercloud/v2"
 	"github.com/gophercloud/gophercloud/v2/openstack/baremetal/v1/allocations"
 	"github.com/gophercloud/gophercloud/v2/openstack/baremetal/v1/nodes"
-	"github.com/gophercloud/gophercloud/v2/openstack/baremetal/v1/portgroups"
 	"github.com/gophercloud/gophercloud/v2/openstack/baremetal/v1/ports"
 	"github.com/openstack-exporter/openstack-exporter/integration/tools"
 )
@@ -75,29 +74,6 @@ func DeleteAllocation(t *testing.T, client *gophercloud.ServiceClient, allocatio
 	}
 
 	t.Logf("Deleted allocation: %s", allocation.UUID)
-}
-
-// CreatePortGroup creates an allocation
-func CreatePortGroup(t *testing.T, client *gophercloud.ServiceClient, node *nodes.Node) (*portgroups.PortGroup, error) {
-	name := tools.RandomString("ACPTTEST", 16)
-	t.Logf("Attempting to create bare metal allocation: %s", name)
-
-	allocation, err := portgroups.Create(context.TODO(), client, portgroups.CreateOpts{
-		Name:     name,
-		NodeUUID: node.UUID,
-	}).Extract()
-
-	return allocation, err
-}
-
-// DeletePortGroup deletes a bare metal portgroup via its UUID.
-func DeletePortGroup(t *testing.T, client *gophercloud.ServiceClient, portgroup *portgroups.PortGroup) {
-	err := portgroups.Delete(context.TODO(), client, portgroup.UUID).ExtractErr()
-	if err != nil {
-		t.Fatalf("Unable to delete portgroup %s: %s", portgroup.UUID, err)
-	}
-
-	t.Logf("Deleted portgroup: %s", portgroup.UUID)
 }
 
 // CreateFakeNode creates a node with fake-hardware.

@@ -10,12 +10,12 @@ import (
 	"testing"
 
 	"github.com/gophercloud/gophercloud/v2"
-	"github.com/gophercloud/gophercloud/v2/internal/acceptance/tools"
 	"github.com/gophercloud/gophercloud/v2/openstack/image/v2/imagedata"
 	"github.com/gophercloud/gophercloud/v2/openstack/image/v2/imageimport"
 	"github.com/gophercloud/gophercloud/v2/openstack/image/v2/images"
 	"github.com/gophercloud/gophercloud/v2/openstack/image/v2/tasks"
 	th "github.com/gophercloud/gophercloud/v2/testhelper"
+	"github.com/openstack-exporter/openstack-exporter/integration/tools"
 )
 
 // CreateEmptyImage will create an image, but with no actual image data.
