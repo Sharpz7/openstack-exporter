@@ -5,7 +5,10 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"sync"
 	"testing"
+
+	"github.com/prometheus/client_golang/prometheus"
 
 	gophercloudv2 "github.com/gophercloud/gophercloud/v2"
 	"github.com/jarcoal/httpmock"
@@ -93,4 +96,102 @@ func TestListAllNodesFollowsMarker(t *testing.T) {
 	require.Len(t, allNodes, 2*serverMaxSize)
 	assert.Equal(t, "node-0000", allNodes[0].UUID)
 	assert.Equal(t, "node-0005", allNodes[len(allNodes)-1].UUID)
+}
+
+// Every subset must keep exactly its requested emitters and fetch shared data
+// once per scrape (the fixture has one populated page and one empty page).
+func (suite *IronicTestSuite) TestIronicDAGMetricSubsets() {
+	original := (*suite.Exporter).(*IronicExporter)
+	names := []string{"node", "node_updated_at", "node_provision_updated_at"}
+	for mask := 0; mask < 8; mask++ {
+		suite.Run(fmt.Sprintf("enabled_%03b", mask), func() {
+			suite.installFixtures()
+			config := original.ExporterConfig
+			config.DisabledMetrics = nil
+			for i, name := range names {
+				if mask&(1<<i) == 0 {
+					config.DisabledMetrics = append(config.DisabledMetrics, "ironic-"+name)
+				}
+			}
+			exporter, err := NewIronicExporter(&config, original.logger)
+			require.NoError(suite.T(), err)
+			httpmock.ZeroCallCounters()
+			registry := prometheus.NewRegistry()
+			require.NoError(suite.T(), registry.Register(exporter))
+			families, err := registry.Gather()
+			require.NoError(suite.T(), err)
+			got := make(map[string]bool)
+			for _, family := range families {
+				got[family.GetName()] = true
+				if family.GetName() == "openstack_ironic_up" {
+					wantUp := 1.0
+					if mask == 0 {
+						wantUp = 0
+					}
+					assert.Equal(suite.T(), wantUp, family.Metric[0].Gauge.GetValue())
+				}
+			}
+			for i, name := range names {
+				assert.Equal(suite.T(), mask&(1<<i) != 0, got["openstack_ironic_"+name], name)
+			}
+			assert.True(suite.T(), got["openstack_ironic_up"])
+			calls := 0
+			for request, count := range httpmock.GetCallCountInfo() {
+				if strings.Contains(request, "/nodes/detail") {
+					calls += count
+				}
+			}
+			wantCalls := 2
+			if mask == 0 {
+				wantCalls = 0
+			}
+			assert.Equal(suite.T(), wantCalls, calls)
+		})
+	}
+}
+
+func (suite *IronicTestSuite) TestIronicDAGFetchFailure() {
+	httpmock.RegisterResponder(http.MethodGet,
+		suite.MakeURL("/ironic/v1/nodes/detail?limit=1000&sort_dir=asc&sort_key=id", ""),
+		httpmock.NewStringResponder(http.StatusInternalServerError, "failed"))
+	err := testutil.CollectAndCompare(*suite.Exporter, strings.NewReader(`
+# HELP openstack_ironic_up up
+# TYPE openstack_ironic_up gauge
+openstack_ironic_up 0
+`))
+	require.NoError(suite.T(), err)
+}
+
+func (suite *IronicTestSuite) TestIronicDAGStateIsScrapeLocal() {
+	exporter := (*suite.Exporter).(*IronicExporter)
+	exporter.CollectTime = true
+	registry := prometheus.NewRegistry()
+	require.NoError(suite.T(), registry.Register(exporter))
+	families, err := registry.Gather()
+	require.NoError(suite.T(), err)
+	timingFound := false
+	for _, family := range families {
+		if family.GetName() == "openstack_metric_collect_seconds" {
+			timingFound = true
+			assert.GreaterOrEqual(suite.T(), family.Metric[0].Gauge.GetValue(), 0.0)
+			assert.Equal(suite.T(), "node", family.Metric[0].Label[0].GetValue())
+		}
+	}
+	require.True(suite.T(), timingFound)
+	// Concurrent subsequent scrapes of an empty cloud must not reuse old nodes.
+	httpmock.RegisterResponder(http.MethodGet,
+		suite.MakeURL("/ironic/v1/nodes/detail?limit=1000&sort_dir=asc&sort_key=id", ""),
+		httpmock.NewJsonResponderOrPanic(http.StatusOK, map[string]any{"nodes": []any{}}))
+	var group sync.WaitGroup
+	for i := 0; i < 2; i++ {
+		group.Go(func() {
+			err := testutil.CollectAndCompare(exporter, strings.NewReader(`
+# HELP openstack_ironic_up up
+# TYPE openstack_ironic_up gauge
+openstack_ironic_up 1
+`), "openstack_ironic_node", "openstack_ironic_node_updated_at", "openstack_ironic_node_provision_updated_at", "openstack_ironic_up")
+			assert.NoError(suite.T(), err)
+		})
+	}
+	group.Wait()
 }
