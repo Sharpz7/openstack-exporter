@@ -92,18 +92,24 @@ func ListMasakariHosts(ctx context.Context, exporter *BaseOpenStackExporter, ch 
 		}
 
 		for _, host := range hosts {
-			ch <- prometheus.MustNewConstMetric(exporter.Metrics["host"].Metric,
-				prometheus.GaugeValue, 1.0,
-				strconv.Itoa(host.ID), host.UUID, host.Hostname, host.FailoverSegmentID,
-				segment.Name, host.Type, host.ControlAttributes)
+			if !exporter.MetricIsDisabled("host") {
+				ch <- prometheus.MustNewConstMetric(exporter.Metrics["host"].Metric,
+					prometheus.GaugeValue, 1.0,
+					strconv.Itoa(host.ID), host.UUID, host.Hostname, host.FailoverSegmentID,
+					segment.Name, host.Type, host.ControlAttributes)
+			}
 
-			ch <- prometheus.MustNewConstMetric(exporter.Metrics["host_on_maintenance"].Metric,
-				prometheus.GaugeValue, boolToFloat64(host.OnMaintenance),
-				host.UUID, host.Hostname, host.FailoverSegmentID)
+			if !exporter.MetricIsDisabled("host_on_maintenance") {
+				ch <- prometheus.MustNewConstMetric(exporter.Metrics["host_on_maintenance"].Metric,
+					prometheus.GaugeValue, boolToFloat64(host.OnMaintenance),
+					host.UUID, host.Hostname, host.FailoverSegmentID)
+			}
 
-			ch <- prometheus.MustNewConstMetric(exporter.Metrics["host_reserved"].Metric,
-				prometheus.GaugeValue, boolToFloat64(host.Reserved),
-				host.UUID, host.Hostname, host.FailoverSegmentID)
+			if !exporter.MetricIsDisabled("host_reserved") {
+				ch <- prometheus.MustNewConstMetric(exporter.Metrics["host_reserved"].Metric,
+					prometheus.GaugeValue, boolToFloat64(host.Reserved),
+					host.UUID, host.Hostname, host.FailoverSegmentID)
+			}
 		}
 	}
 

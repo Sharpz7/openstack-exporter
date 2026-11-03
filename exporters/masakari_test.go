@@ -3,6 +3,7 @@ package exporters
 import (
 	"strings"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/testutil"
 	"github.com/stretchr/testify/assert"
 )
@@ -35,4 +36,29 @@ openstack_masakari_up 1
 func (suite *MasakariTestSuite) TestMasakariExporter() {
 	err := testutil.CollectAndCompare(*suite.Exporter, strings.NewReader(masakariExpectedUp))
 	assert.NoError(suite.T(), err)
+}
+
+func (suite *MasakariTestSuite) TestDisabledHostMetrics() {
+	for _, name := range []string{"host", "host_on_maintenance", "host_reserved"} {
+		suite.Run(name, func() {
+			suite.teardownFixtures()
+			suite.installFixtures()
+			original := (*suite.Exporter).(*MasakariExporter)
+			config := original.ExporterConfig
+			config.DisabledMetrics = []string{"masakari-" + name}
+			exporter, err := NewMasakariExporter(&config, original.logger)
+			suite.Require().NoError(err)
+			registry := prometheus.NewRegistry()
+			suite.Require().NoError(registry.Register(exporter))
+			metrics, err := registry.Gather()
+			suite.Require().NoError(err)
+			names := make(map[string]bool)
+			for _, metric := range metrics {
+				names[metric.GetName()] = true
+			}
+			suite.False(names["openstack_masakari_"+name])
+			suite.True(names["openstack_masakari_segment"])
+			suite.True(names["openstack_masakari_up"])
+		})
+	}
 }
